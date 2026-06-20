@@ -1,5 +1,5 @@
 # Vercel Python Serverless Function (native BaseHTTPRequestHandler).
-# Vercel auto-routes this file to /api  — no vercel.json rewrites needed.
+# Vercel auto-routes this file to /api — no vercel.json rewrites needed.
 import json
 import statistics
 from collections import defaultdict
@@ -26,18 +26,19 @@ def compute(body):
     for row in DATA:
         if row.get("region") in regions:
             groups[row["region"]].append(row)
-    out = {}
+    out = []
     for r in regions:
         rows = groups.get(r, [])
         lats = [x["latency_ms"] for x in rows]
-        ups = [x["uptime_pct"] for x in rows]
-        out[r] = {
+        ups  = [x["uptime_pct"] for x in rows]
+        out.append({
+            "region":      r,
             "avg_latency": round(statistics.fmean(lats), 2) if lats else 0,
             "p95_latency": round(percentile(lats, 0.95), 2) if lats else 0,
             "avg_uptime":  round(statistics.fmean(ups), 3)  if ups  else 0,
             "breaches":    sum(1 for v in lats if v > thr),
-        }
-    return out
+        })
+    return {"regions": out}
 
 
 class handler(BaseHTTPRequestHandler):
